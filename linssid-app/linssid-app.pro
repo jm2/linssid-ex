@@ -22,11 +22,11 @@ INCLUDEPATH += /usr/include/boost
 INCLUDEPATH += /usr/include/qt5
 INCLUDEPATH += /usr/include/qwt
 LIBS += -lboost_regex
-LIBS += -lqwt-qt5
+LIBS += -lqwt
 QMAKE_CXXFLAGS += -std=c++17
 #
 TARGET = linssid
-target.path = /usr/sbin
+target.path = /usr/bin
 INSTALLS += target
 targetexec.path = /usr/bin
 targetexec.files=linssid-pkexec

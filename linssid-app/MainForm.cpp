@@ -28,6 +28,7 @@
 #include <qwt_plot_curve.h>
 #include <qwt_plot_grid.h>
 #include <qwt_symbol.h>
+#include <qwt_text.h>
 #include <qwt_plot_marker.h>
 #include <qwt_plot_textlabel.h>
 #include <QPointF>
@@ -800,7 +801,7 @@ void MainForm::fillPlots() {
                     QPointF((float) cellDataRay_[tbi].channel,
                     cellDataRay_[tbi].signal));
         } else {
-            cellDataRay_[tbi].pBandCurve->setSamples(0, 0, 0);
+            cellDataRay_[tbi].pBandCurve->setSamples((double*)0, (double*)0, 0);
         }
 
         // now the signal history plot
@@ -831,7 +832,7 @@ void MainForm::fillPlots() {
                 cellDataRay_[tbi].pSignalTimeMarker->setLabel(QwtText(""));
             }
         } else {
-            cellDataRay_[tbi].pTimeCurve->setSamples(0, 0, 0);
+            cellDataRay_[tbi].pTimeCurve->setSamples((double*)0, (double*)0, 0);
             cellDataRay_[tbi].pSignalTimeMarker->setLabel(QwtText(""));
         }
     }
