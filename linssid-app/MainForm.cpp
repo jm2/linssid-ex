@@ -660,8 +660,13 @@ void MainForm::fillTable() {
         cellDataRay_[row].pTableItem[CIPHER]->
                 setText((cellDataRay_[row].cipher).c_str());
         cellDataRay_[row].pTableItem[CIPHER]->setTextAlignment(Qt::AlignCenter);
-        cellDataRay_[row].pTableItem[FREQUENCY]->
-                setText(cellDataRay_[row].frequency.c_str());
+        if(cellDataRay_[row].frequency.c_str() == "6Ghz"){
+          cellDataRay_[row].pTableItem[FREQUENCY]->setText("6Ghz");
+        }else if(cellDataRay_[row].frequency.c_str() == "5Ghz"){
+          cellDataRay_[row].pTableItem[FREQUENCY]->setText("5Ghz");
+        }else{
+          cellDataRay_[row].pTableItem[FREQUENCY]->setText("2.4Ghz");
+        }
         cellDataRay_[row].pTableItem[FREQUENCY]->setTextAlignment(Qt::AlignCenter);
         cellDataRay_[row].pTableItem[QUALITY]->
                 setData(cellDataRay_[row].quality, Qt::DisplayRole);
@@ -735,7 +740,7 @@ public:
     }
 
     virtual QwtText label(double v) const {
-        if ((v > 160.0) && (v <= 500.0) && (int(v) % 10 == 0)) return (QString::number(int(v)));
+        if ((v >= 170.0) && (v <= 500.0) && (int(v) % 10 == 0)) return (QString::number(int(v)));
 
         else return (QString(""));
     }
@@ -1020,83 +1025,32 @@ void MainForm::extractData(string tl, int &tbi, int &newBSS) {
             boost::regex_constants::icase))) {
         string tempFreq = sm[1];
         cellDataRay_[tbi].frequency = tempFreq;
-    } else if (boost::regex_match(tl, sm, boost::regex("^.*?signal:.*?([\\-0-9]+).*?dBm.*",
-            boost::regex_constants::icase))) {
-            string tempSig = sm[1];
-            cellDataRay_[tbi].signal = atoi(tempSig.c_str());
-            if (cellDataRay_[tbi].signal < cellDataRay_[tbi].minSignal)
-                cellDataRay_[tbi].minSignal = cellDataRay_[tbi].signal;
-            if (cellDataRay_[tbi].signal > cellDataRay_[tbi].maxSignal)
-                cellDataRay_[tbi].maxSignal = cellDataRay_[tbi].signal;
-            // add to history
-            if (cellDataRay_[tbi].timesSeen == 1) {
-                int ixTemp = cellDataRay_[tbi].pHistory->totalSamples % MAX_SAMPLES;
-                cellDataRay_[tbi].pHistory->sampleSec[ixTemp] = blockSampleTime_;
-                cellDataRay_[tbi].pHistory->sampleSec[ixTemp + MAX_SAMPLES]
-                    = blockSampleTime_;
-                cellDataRay_[tbi].pHistory->signal[ixTemp] = cellDataRay_[tbi].signal;
-                cellDataRay_[tbi].pHistory->signal[ixTemp + MAX_SAMPLES] = cellDataRay_[tbi].signal;
-                cellDataRay_[tbi].pHistory->totalSamples++;
-            } else {
-                int ixTemp = (cellDataRay_[tbi].pHistory->totalSamples - 1) % MAX_SAMPLES;
-                cellDataRay_[tbi].pHistory->sampleSec[ixTemp] = blockSampleTime_;
-                cellDataRay_[tbi].pHistory->sampleSec[ixTemp + MAX_SAMPLES]
-                    = blockSampleTime_;
-                cellDataRay_[tbi].pHistory->signal[ixTemp] = cellDataRay_[tbi].signal;
-                cellDataRay_[tbi].pHistory->signal[ixTemp + MAX_SAMPLES] = cellDataRay_[tbi].signal;
-            }
-            if (cellDataRay_[tbi].signal <= -100) cellDataRay_[tbi].quality = 0;
-            else if(cellDataRay_[tbi].signal >= -50) cellDataRay_[tbi].quality = 100;
-            else cellDataRay_[tbi].quality = 2 * (cellDataRay_[tbi].signal + 100);
-    } else if (boost::regex_match(tl, sm, boost::regex(".*?Group cipher: *(.*)",
-            boost::regex_constants::icase))) { // group cipher
-        cellDataRay_[tbi].privacy = sm[1];
-    } else if (pageBlock == BT_HT_CAPABILITIES && boost::regex_match(tl, sm, boost::regex(".*?HT20/HT40.*",
-            boost::regex_constants::icase))) { // HT Capabilities - HT20/HT40 if 40 MHz capable, actual BW is determined from HT Op
-        cellDataRay_[tbi].BW = 40;
-    } else if (pageBlock == BT_HT_OPERATION && boost::regex_match(tl, sm, boost::regex("^.*?STA channel width: (any|\\d+).*",
-            boost::regex_constants::icase))) {
-        string bwString = sm[1];
-        if (bwString == "any") return; // Dont change, use bw derived from HT Capabilities
-        cellDataRay_[tbi].BW = atoi(bwString.c_str());
-    } else if (pageBlock == BT_VHT_OPERATION && boost::regex_match(tl, sm, boost::regex(".*?\\* channel width:.*?([0-9]).*?([0-9]+) MHz.*",
-            boost::regex_constants::icase))) { // Bandwidth VHT
-        int val = atoi(string(sm[1]).c_str());
-        if (val == 0) return; // 0 (20 or 40 MHz) - BW from HT operation should be used
-        string bwString = sm[2];
-        cellDataRay_[tbi].BW = atoi(bwString.c_str());
-    } else if (boost::regex_match(tl, sm, boost::regex(".*?Pairwise ciphers: *(.*)",
-            boost::regex_constants::icase))) { // pairwise ciphers
-        cellDataRay_[tbi].cipher = sm[1];
-    } else if (boost::regex_match(tl, sm, boost::regex(".*?Authentication suites: *(.*)",
-            boost::regex_constants::icase))) { // authentication
-            cellDataRay_[tbi].security = sm[1];
-    } else if (boost::regex_match(tl, sm, boost::regex(".*?RSN: *(.*)",
-            boost::regex_constants::icase))) { pageBlock = BT_RSN;
-    } else if (boost::regex_match(tl, sm, boost::regex(".*?BSS Load: *(.*)",
-            boost::regex_constants::icase))) { pageBlock = BT_BSS_LOAD;
-    } else if (pageBlock == BT_BSS_LOAD && boost::regex_match(tl, sm, boost::regex("^.*?channel util.*?:.*?([0-9]+)/([0-9]+).*",
-            boost::regex_constants::icase))) {
-            int x = atoi(string(sm[1]).c_str());
-            int y = atoi(string(sm[2]).c_str());
-            if (y > 0) {
-                cellDataRay_[tbi].load = (int)(x * 100 / y);
-            }
-    } else if (pageBlock == BT_BSS_LOAD && boost::regex_match(tl, sm, boost::regex("^.*?station count:.*?([0-9]+).*",
-            boost::regex_constants::icase))) {
-                cellDataRay_[tbi].stationCount = atoi(string(sm[1]).c_str());
-    } else if (boost::regex_match(tl, sm, boost::regex("[^V]*HT operation: *(.*)",
-            boost::regex_constants::icase))) { pageBlock = BT_HT_OPERATION;
-    } else if (boost::regex_match(tl, sm, boost::regex(".*?Extended capabilities: *(.*)",
-            boost::regex_constants::icase))) { pageBlock = BT_EXTENDED_CAPABILITIES;
-    } else if (boost::regex_match(tl, sm, boost::regex(".*?VHT operation:.*",
-            boost::regex_constants::icase))) { pageBlock = BT_VHT_OPERATION;
-    } else if (boost::regex_match(tl, sm, boost::regex(".*?WPA: *(.*)",
-            boost::regex_constants::icase))) { pageBlock = BT_WPA;
-    } else if (boost::regex_match(tl, sm, boost::regex(".*?WPS: *(.*)",
-            boost::regex_constants::icase))) { pageBlock = BT_WPS;
-    } else if (boost::regex_match(tl, sm, boost::regex(".*?WMM: *(.*)",
-            boost::regex_constants::icase))) { pageBlock = BT_WMM;
+        if(atoi(tempFreq.c_str()) > 5000){
+           cellDataRay_[tbi].frequency = "6Ghz"; 
+        } else if (atoi(tempFreq.c_str()) > 170 && atoi(tempFreq.c_str()) < 5000) {
+            cellDataRay_[tbi].frequency = "5Ghz";
+        } else {
+            cellDataRay_[tbi].frequency = "2.4Ghz";
+        }
+    } else if (boost::regex_match(tl, sm,
+          boost::regex("^.*?primary channel: +([0-9]+).*", boost::regex_constants::icase))) {
+        string tempChan = sm[1];
+        cellDataRay_[tbi].channel = atoi(tempChan.c_str());
+        cellDataRay_[tbi].cenChan = cellDataRay_[tbi].channel;
+        if (cellDataRay_[tbi].channel > 170)
+        {
+            stats_.total6GBss++;
+        }
+    } else if (boost::regex_match(tl, sm,
+          boost::regex("^.*?DS Parameter set: +(channel)?.*?([0-9]+).*", boost::regex_constants::icase))
+          && cellDataRay_[tbi].channel == 0) {
+        string tempChan = sm[2];
+        cellDataRay_[tbi].channel = atoi(tempChan.c_str());
+        cellDataRay_[tbi].cenChan = cellDataRay_[tbi].channel;
+        if (cellDataRay_[tbi].channel > 170)
+        {
+            stats_.total6GBss++;
+        }
     }
 } // extractData()
 
