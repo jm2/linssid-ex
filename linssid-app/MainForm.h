@@ -54,11 +54,13 @@ public:
     void fillTable();
     class Chan24ScaleDraw;
     class Chan5ScaleDraw;
+    class Chan6ScaleDraw;
     void initColtoAction();
     void initPlotGrids();
     void initStatusBar();
     void drawChan24Plot();
     void drawChan5Plot();
+    void drawChan6Plot();
     void drawTimePlot();
     void fillPlots();
     void fillStatus();
@@ -112,6 +114,7 @@ private:
     std::unique_ptr<QLabel> statusCounts_;
     std::unique_ptr<QwtPlotGrid> chan24Grid_;
     std::unique_ptr<QwtPlotGrid> chan5Grid_;
+    std::unique_ptr<QwtPlotGrid> chan6Grid_;
     std::unique_ptr<QwtPlotGrid> timeGrid_;
     Stats stats_;
 

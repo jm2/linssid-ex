@@ -52,6 +52,25 @@
    <property name="checkable">
     <bool>true</bool>
    </property>
+   <widget class="QCheckBox" name="checkBox6G">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>30</y>
+      <width>92</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>Show 6GHz BSS</string>
+    </property>
+    <property name="text">
+     <string>6GHz</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
    <widget class="QCheckBox" name="checkBox5G">
     <property name="geometry">
      <rect>

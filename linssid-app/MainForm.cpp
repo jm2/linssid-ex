@@ -190,6 +190,7 @@ void MainForm::init() {
     MainForm::drawTable(); // do it again after application of prefs
     MainForm::drawChan24Plot();
     MainForm::drawChan5Plot();
+    MainForm::drawChan6Plot();
     MainForm::drawTimePlot();
     dataLogger_ = make_unique<DataLogger>(storageDir + string(LOG_DATA_FILE_NAME));
     vendorDb_ = make_unique<VendorDb>();
@@ -232,6 +233,9 @@ void MainForm::initPlotGrids() {
     chan5Grid_ = make_unique<QwtPlotGrid>();
     chan5Grid_->enableX(false);
     chan5Grid_->attach(mainFormWidget.chan5Plot);
+    chan6Grid_ = make_unique<QwtPlotGrid>();
+    chan6Grid_->enableX(false);
+    chan6Grid_->attach(mainFormWidget.chan6Plot);
     timeGrid_ = make_unique<QwtPlotGrid>();
     timeGrid_->enableX(false);
     timeGrid_->attach(mainFormWidget.timePlot);
@@ -326,9 +330,11 @@ void MainForm::applyPlotPrefs(int fntSize, int plotMin, int plotMax, bool showGr
     mainFormWidget.timePlot->setAxisScale(QwtPlot::yLeft, plotMin, plotMax, 20);
     mainFormWidget.chan24Plot->setAxisScale(QwtPlot::yLeft, plotMin, plotMax, 20);
     mainFormWidget.chan5Plot->setAxisScale(QwtPlot::yLeft, plotMin, plotMax, 20);
+    mainFormWidget.chan6Plot->setAxisScale(QwtPlot::yLeft, plotMin, plotMax, 20);
     timeGrid_->enableY(showGrid);
     chan24Grid_->enableY(showGrid);
     chan5Grid_->enableY(showGrid);
+    chan6Grid_->enableY(showGrid);
 }
 
 void MainForm::updatePlotPrefs(QString tblFntSize, int plotMin, int plotMax, bool showGrid, bool showLabel) {
@@ -339,6 +345,7 @@ void MainForm::updatePlotPrefs(QString tblFntSize, int plotMin, int plotMax, boo
     mainFormWidget.timePlot->replot();
     mainFormWidget.chan24Plot->replot();
     mainFormWidget.chan5Plot->replot();
+    mainFormWidget.chan6Plot->replot();
 }
 
 void MainForm::logPrefChanged(int state) {
@@ -443,6 +450,7 @@ void MainForm::doRun() {
         MainForm::drawTable();
         MainForm::drawChan24Plot();
         MainForm::drawChan5Plot();
+        MainForm::drawChan6Plot();
         MainForm::drawTimePlot();
     } else {
         if (runState != STOPPED) runState = STOPPING;
@@ -633,7 +641,8 @@ void MainForm::fillTable() {
         cellDataRay_[row].pTableItem[CHANNEL]->
                 setData(cellDataRay_[row].channel,Qt::DisplayRole);
         if (cellDataRay_[row].channel <= 14) stats_.total2GBss++;
-        else stats_.total5GBss++;
+        else if (cellDataRay_[row].channel <= 177) stats_.total5GBss++;
+        else stats_.total6GBss++;
         cellDataRay_[row].pTableItem[CHANNEL]->setTextAlignment(Qt::AlignCenter);
         cellDataRay_[row].pTableItem[MODE]->
                 setText(cellDataRay_[row].mode.c_str());
@@ -719,6 +728,19 @@ public:
     }
 };
 
+class MainForm::Chan6ScaleDraw : public QwtScaleDraw {
+public:
+
+    Chan6ScaleDraw() {
+    }
+
+    virtual QwtText label(double v) const {
+        if ((v > 160.0) && (v <= 500.0) && (int(v) % 10 == 0)) return (QString::number(int(v)));
+
+        else return (QString(""));
+    }
+};
+
 void MainForm::drawChan24Plot() {
 
     mainFormWidget.chan24Plot->setAxisScale(QwtPlot::xBottom, -1, 16, 1);
@@ -733,6 +755,14 @@ void MainForm::drawChan5Plot() {
     mainFormWidget.chan5Plot->setAxisMaxMinor(QwtPlot::xBottom, 5);
     mainFormWidget.chan5Plot->setAxisScaleDraw(QwtPlot::xBottom, new Chan5ScaleDraw());
     mainFormWidget.chan5Plot->replot();
+}
+
+void MainForm::drawChan6Plot() {
+
+    mainFormWidget.chan6Plot->setAxisScale(QwtPlot::xBottom, 170, 500, 10);
+    mainFormWidget.chan6Plot->setAxisMaxMinor(QwtPlot::xBottom, 5);
+    mainFormWidget.chan6Plot->setAxisScaleDraw(QwtPlot::xBottom, new Chan6ScaleDraw());
+    mainFormWidget.chan6Plot->replot();
 }
 
 void MainForm::drawTimePlot() {
@@ -772,9 +802,12 @@ void MainForm::fillPlots() {
                 if (cellDataRay_[tbi].frequency.substr(0, 1) == "2") {
                     cellDataRay_[tbi].pBandCurve->attach(mainFormWidget.chan24Plot);
                     cellDataRay_[tbi].pCntlChanPlot->attach(mainFormWidget.chan24Plot);
-                } else {
+                } else if (cellDataRay_[tbi].frequency.substr(0, 1) == "5") {
                     cellDataRay_[tbi].pBandCurve->attach(mainFormWidget.chan5Plot);
                     cellDataRay_[tbi].pCntlChanPlot->attach(mainFormWidget.chan5Plot);
+                } else {
+                    cellDataRay_[tbi].pBandCurve->attach(mainFormWidget.chan6Plot);
+                    cellDataRay_[tbi].pCntlChanPlot->attach(mainFormWidget.chan6Plot);
                 }
                 cellDataRay_[tbi].pSignalTimeMarker->attach(mainFormWidget.timePlot);
                 cellDataRay_[tbi].firstPlot = false;
@@ -838,6 +871,7 @@ void MainForm::fillPlots() {
     }
     mainFormWidget.chan24Plot->replot();
     mainFormWidget.chan5Plot->replot();
+    mainFormWidget.chan6Plot->replot();
     mainFormWidget.timePlot->replot();
 }
 

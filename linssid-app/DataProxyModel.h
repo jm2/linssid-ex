@@ -13,6 +13,7 @@
 struct FilterState {
     bool byBand = true;
     bool showBand5G = true;
+    bool showBand6G = true;
     bool showBand24G = true;
     bool byChannel = false;
     std::string channels = "1-165";

@@ -94,7 +94,8 @@ bool DataProxyModel::Impl::acceptChannel(int channel) const
 {
     if (state.byBand) {
         if (channel <= 14 && !state.showBand24G) return false;
-        if (channel > 14 && !state.showBand5G) return false;
+        if (channel > 14 && channel <= 177 && !state.showBand5G) return false;
+        if (channel > 177 && !state.showBand6G) return false;
     }
     if (state.byChannel) {
         if (!isChannelInBuckets(channel)) return false;
@@ -229,6 +230,7 @@ void DataProxyModel::save(const std::string& file)
     prefs << "filter.band=" << impl_->state.byBand << endl;
     prefs << "filter.band.2g=" << impl_->state.showBand24G << endl;
     prefs << "filter.band.5g=" << impl_->state.showBand5G << endl;
+    prefs << "filter.band.6g=" << impl_->state.showBand6G << endl;
     prefs << "filter.channel=" << impl_->state.byChannel << endl;
     prefs << "filter.channel.text=" << impl_->state.channels << endl;
     prefs << "filter.ssid=" << impl_->state.bySsid << endl;
